@@ -1,5 +1,5 @@
 /*
- * Copyright (C)  Brandon Chuang <brandon_chuang@accton.com.tw>
+ * Copyright (C)  Jake Lin <jake_lin@edge-core.com>
  * Based on:
  *	pca954x.c from Kumar Gala <galak@kernel.crashing.org>
  * Copyright (C) 2006

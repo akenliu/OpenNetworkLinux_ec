@@ -1,8 +1,8 @@
 /*
  * A hwmon driver for the as7946_74xkb_cpld
  *
- * Copyright (C) 2019  Edgecore Networks Corporation.
- * Jostar Yang <brandon_chuang@edge-core.com>
+ * Copyright (C) 2021  Edgecore Networks Corporation.
+ * Jake Lin <jake_lin@edge-core.com>
  *
  * Based on ad7414.c
  * Copyright 2006 Stefan Roese <sr at denx.de>, DENX Software Engineering

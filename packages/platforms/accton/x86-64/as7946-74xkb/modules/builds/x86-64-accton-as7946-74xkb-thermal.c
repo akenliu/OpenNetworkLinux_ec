@@ -1,5 +1,5 @@
 /*
- * Copyright (C)  Brandon Chuang <brandon_chuang@accton.com.tw>
+ * Copyright (C)  Jake Lin <jake_lin@edge-core.com>
  *
  * Based on:
  *	pca954x.c from Kumar Gala <galak@kernel.crashing.org>
@@ -42,8 +42,6 @@
 static void ipmi_msg_handler(struct ipmi_recv_msg *msg, void *user_msg_data);
 static ssize_t show_temp(struct device *dev, struct device_attribute *attr,
 	char *buf);
-static ssize_t set_temp(struct device *dev, struct device_attribute *da,
-	const char *buf, size_t count);
 static int as7946_74xkb_thermal_probe(struct platform_device *pdev);
 static int as7946_74xkb_thermal_remove(struct platform_device *pdev);
 
@@ -76,7 +74,7 @@ struct as7946_74xkb_thermal_data {
 	struct mutex update_lock;
 	char valid;		   /* != 0 if registers are valid */
 	unsigned long last_updated;	/* In jiffies */
-	char   ipmi_resp[36]; /* 3 bytes for each thermal */
+	char   ipmi_resp[27]; /* 3 bytes for each thermal */
 	struct ipmi_data ipmi;
 	unsigned char ipmi_tx_data[2];  /* 0: thermal id, 1: temp */
 };
@@ -100,17 +98,19 @@ enum as7946_74xkb_thermal_sysfs_attrs {
 	TEMP5_INPUT,
 	TEMP6_INPUT,
 	TEMP7_INPUT,
+	TEMP8_INPUT,
+	TEMP9_INPUT,
 };
 
 static SENSOR_DEVICE_ATTR(temp1_input, S_IRUGO, show_temp, NULL, TEMP1_INPUT);
-static SENSOR_DEVICE_ATTR(temp2_input, S_IWUSR | S_IRUGO, show_temp, set_temp,
-							TEMP2_INPUT);
-static SENSOR_DEVICE_ATTR(temp3_input, S_IWUSR | S_IRUGO, show_temp, set_temp,
-							TEMP3_INPUT);
+static SENSOR_DEVICE_ATTR(temp2_input, S_IRUGO, show_temp, NULL, TEMP2_INPUT);
+static SENSOR_DEVICE_ATTR(temp3_input, S_IRUGO, show_temp, NULL, TEMP3_INPUT);
 static SENSOR_DEVICE_ATTR(temp4_input, S_IRUGO, show_temp, NULL, TEMP4_INPUT);
 static SENSOR_DEVICE_ATTR(temp5_input, S_IRUGO, show_temp, NULL, TEMP5_INPUT);
 static SENSOR_DEVICE_ATTR(temp6_input, S_IRUGO, show_temp, NULL, TEMP6_INPUT);
 static SENSOR_DEVICE_ATTR(temp7_input, S_IRUGO, show_temp, NULL, TEMP7_INPUT);
+static SENSOR_DEVICE_ATTR(temp8_input, S_IRUGO, show_temp, NULL, TEMP8_INPUT);
+static SENSOR_DEVICE_ATTR(temp9_input, S_IRUGO, show_temp, NULL, TEMP9_INPUT);
 
 static struct attribute *as7946_74xkb_thermal_attributes[] = {
 	&sensor_dev_attr_temp1_input.dev_attr.attr,
@@ -120,6 +120,8 @@ static struct attribute *as7946_74xkb_thermal_attributes[] = {
 	&sensor_dev_attr_temp5_input.dev_attr.attr,
 	&sensor_dev_attr_temp6_input.dev_attr.attr,
 	&sensor_dev_attr_temp7_input.dev_attr.attr,
+	&sensor_dev_attr_temp8_input.dev_attr.attr,
+	&sensor_dev_attr_temp9_input.dev_attr.attr,
 	NULL
 };
 
@@ -302,43 +304,6 @@ static ssize_t show_temp(struct device *dev, struct device_attribute *da,
 
 	mutex_unlock(&data->update_lock);
 	return sprintf(buf, "%d\n", status);
-
-exit:
-	mutex_unlock(&data->update_lock);
-	return status;
-}
-
-static ssize_t set_temp(struct device *dev, struct device_attribute *da,
-			const char *buf, size_t count)
-{
-	long temp;
-	int status;
-	struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-
-	status = kstrtol(buf, 10, &temp);
-	if (status)
-		return status;
-
-	if (temp > 127 || temp < -128)
-		return -EINVAL;
-
-	mutex_lock(&data->update_lock);
-
-	/* Send IPMI write command */
-	data->ipmi_tx_data[0] = attr->index + 1;
-	data->ipmi_tx_data[1] = (s8)temp;
-	status = ipmi_send_message(&data->ipmi, IPMI_THERMAL_WRITE_CMD,
-								data->ipmi_tx_data, sizeof(data->ipmi_tx_data), NULL, 0);
-	if (unlikely(status != 0))
-		goto exit;
-
-	if (unlikely(data->ipmi.rx_result != 0)) {
-		status = -EIO;
-		goto exit;
-	}
-
-	data->ipmi_resp[attr->index * TEMP_DATA_COUNT + TEMP_INPUT] = temp;
-	status = count;
 
 exit:
 	mutex_unlock(&data->update_lock);

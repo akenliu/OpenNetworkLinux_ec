@@ -37,13 +37,13 @@
 #include "x86_64_accton_as7946_74xkb_int.h"
 #include "x86_64_accton_as7946_74xkb_log.h"
 
-#define NUM_OF_CPLD 3
+#define CPLD_VERSION_FORMAT "/sys/devices/platform/as7946_74xkb_sys/%s"
 
-static char* cpld_path[NUM_OF_CPLD] = {
-    "/sys/bus/i2c/devices/12-0061/version",
-    "/sys/bus/i2c/devices/13-0062/version",
-    "/sys/bus/i2c/devices/16-0063/version"
-};
+typedef struct cpld_version {
+    char *attr_name;
+    int   version;
+    char *description;
+} cpld_version_t;
 
 const char*
 onlp_sysi_platform_get(void)
@@ -75,22 +75,22 @@ onlp_sysi_oids_get(onlp_oid_t* table, int max)
     onlp_oid_t* e = table;
     memset(table, 0, max*sizeof(onlp_oid_t));
 
-    /* 7 Thermal sensors on the chassis */
+    /* 8 Thermal sensors on the chassis */
     for (i = 1; i <= CHASSIS_THERMAL_COUNT; i++) {
         *e++ = ONLP_THERMAL_ID_CREATE(i);
     }
 
-    /* 4 LEDs on the chassis */
+    /* 6 LEDs on the chassis */
     for (i = 1; i <= CHASSIS_LED_COUNT; i++) {
         *e++ = ONLP_LED_ID_CREATE(i);
     }
 
-    /* 3 PSUs on the chassis */
+    /* 2 PSUs on the chassis */
     for (i = 1; i <= CHASSIS_PSU_COUNT; i++) {
         *e++ = ONLP_PSU_ID_CREATE(i);
     }
 
-    /* 12 Fans on the chassis */
+    /* 5 Fans on the chassis */
     for (i = 1; i <= CHASSIS_FAN_COUNT; i++) {
         *e++ = ONLP_FAN_ID_CREATE(i);
     }
@@ -101,17 +101,32 @@ onlp_sysi_oids_get(onlp_oid_t* table, int max)
 int
 onlp_sysi_platform_info_get(onlp_platform_info_t* pi)
 {
-    int i, v[NUM_OF_CPLD] = {0};
+    int i, ret;
+    cpld_version_t cplds[] = { { "mb_cpld1_ver", 0, "Mainboard-CPLD#1"},
+                   { "cpu_cpld_ver", 0, "CPU-CPLD"},
+                   { "fan_cpld_ver", 0, "FAN-CPLD"} };
+    /* Read CPLD version
+     */
+    for (i = 0; i < AIM_ARRAYSIZE(cplds); i++) {
+        ret = onlp_file_read_int(&cplds[i].version, 
+                     CPLD_VERSION_FORMAT, 
+                     cplds[i].attr_name);
 
-    for (i = 0; i < AIM_ARRAYSIZE(cpld_path); i++) {
-        v[i] = 0;
-
-        if(onlp_file_read_int(v+i, cpld_path[i]) < 0) {
+        if (ret < 0) {
+            AIM_LOG_ERROR("Unable to read version from \
+                       CPLD(%s)\r\n", 
+                       cplds[i].attr_name);
             return ONLP_STATUS_E_INTERNAL;
         }
     }
 
-    pi->cpld_versions = aim_fstrdup("%d.%d.%d", v[0], v[1], v[2]);
+    pi->cpld_versions = aim_fstrdup("%s:%d, %s:%d, %s:%d", 
+                    cplds[0].description, 
+                    cplds[0].version,
+                    cplds[1].description, 
+                    cplds[1].version,
+                    cplds[2].description, 
+                    cplds[2].version);
     return ONLP_STATUS_OK;
 }
 

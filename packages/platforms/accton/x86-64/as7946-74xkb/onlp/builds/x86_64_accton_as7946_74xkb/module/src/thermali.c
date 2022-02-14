@@ -44,6 +44,8 @@ static char* ipmi_devfiles__[] = { /* must map with onlp_thermal_id */
     "/sys/devices/platform/as7946_74xkb_thermal/temp5_input",
     "/sys/devices/platform/as7946_74xkb_thermal/temp6_input",
     "/sys/devices/platform/as7946_74xkb_thermal/temp7_input",
+    "/sys/devices/platform/as7946_74xkb_thermal/temp8_input",
+    "/sys/devices/platform/as7946_74xkb_thermal/temp9_input",
     "/sys/devices/platform/as7946_74xkb_psu/psu1_temp1_input",
     "/sys/devices/platform/as7946_74xkb_psu/psu1_temp2_input",
     "/sys/devices/platform/as7946_74xkb_psu/psu1_temp3_input",
@@ -106,6 +108,14 @@ static onlp_thermal_info_t linfo[] = {
     { { ONLP_THERMAL_ID_CREATE(THERMAL_6_ON_MAINBOARD), "Main Board LM75_4F", 0, {0} },
             ONLP_THERMAL_STATUS_PRESENT,
             AS7946_74XKB_THERMAL_CAPS, 0, {72000, 79000, 86000}
+        },
+    { { ONLP_THERMAL_ID_CREATE(THERMAL_1_ON_FANCPLD), "Fan CPLD SENSOR_4D", 0, {0} },
+            ONLP_THERMAL_STATUS_PRESENT,
+            AS7946_74XKB_THERMAL_CAPS, 0, {0, 0, 0}
+        },
+    { { ONLP_THERMAL_ID_CREATE(THERMAL_2_ON_FANCPLD), "Fan CPLD SENSOR_4E", 0, {0} },
+            ONLP_THERMAL_STATUS_PRESENT,
+            AS7946_74XKB_THERMAL_CAPS, 0, {0, 0, 0}
         },
     { { ONLP_THERMAL_ID_CREATE(THERMAL_1_ON_PSU1), "PSU-1 Thermal Sensor 1", ONLP_PSU_ID_CREATE(PSU1_ID), {0} },
             ONLP_THERMAL_STATUS_PRESENT,
