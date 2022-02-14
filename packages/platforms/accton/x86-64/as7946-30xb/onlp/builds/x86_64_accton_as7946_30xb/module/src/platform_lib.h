@@ -30,9 +30,9 @@
 #include "x86_64_accton_as7946_30xb_log.h"
 
 #define CHASSIS_FAN_COUNT     5
-#define CHASSIS_THERMAL_COUNT 8
+#define CHASSIS_THERMAL_COUNT 10
 #define CHASSIS_PSU_THERMAL_COUNT 3
-#define CHASSIS_LED_COUNT     4
+#define CHASSIS_LED_COUNT     6
 #define CHASSIS_PSU_COUNT     2
 
 #define PSU1_ID 1
@@ -40,15 +40,15 @@
 
 #define PSU_SYSFS_PATH "/sys/devices/platform/as7946_30xb_psu/"
 #define FAN_BOARD_PATH "/sys/devices/platform/as7946_30xb_fan/"
-#define IDPROM_PATH "/sys/class/i2c-adapter/i2c-0/0-0057/eeprom"
+#define IDPROM_PATH    "/sys/devices/platform/as7946_30xb_sys/eeprom"
 
-enum onlp_led_id
-{
-    LED_RESERVED = 0,
-    LED_PSU,
-    LED_FAN,
+enum onlp_led_id {
+    LED_LOC = 1,
     LED_DIAG,
-    LED_LOC
+    LED_PSU1,
+    LED_PSU2,
+    LED_FAN,
+    LED_ALARM
 };
 
 enum onlp_thermal_id {
@@ -61,6 +61,8 @@ enum onlp_thermal_id {
     THERMAL_4_ON_MAINBOARD,  /* LM75_4D Temp */
     THERMAL_5_ON_MAINBOARD,  /* LM75_4E Temp */
     THERMAL_6_ON_MAINBOARD,  /* LM75_4F Temp */
+    THERMAL_1_ON_FANCPLD,    /* FAN_4D Temp */
+    THERMAL_2_ON_FANCPLD,    /* FAN_4E Temp */
     THERMAL_1_ON_PSU1,
     THERMAL_2_ON_PSU1,
     THERMAL_3_ON_PSU1,
